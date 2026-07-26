@@ -23,8 +23,25 @@ def crear_tarea(tarea: TareaCreate, usuario_actual: Usuario = Depends(get_curren
     return tarea_nueva
 
 
-@router.get("/tareas", response_model=List[TareaResponse])
+@router.get("/tareas", response_model=list[TareaResponse])
 def listar_tareas(usuario_actual: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
-    tarea_db = db.query(Tarea).filter(usuario_id == usuario_actual.id).all()
+    tarea_db = db.query(Tarea).filter(Tarea.usuario_id == usuario_actual.id).all()
 
     return tarea_db
+
+@router.put("/tareas/{tarea_id}", response_model=TareaResponse)
+def actualizar_tarea(tarea_id: int, tarea_actualizada: TareaCreate, 
+                    usuario_actual: Usuario = Depends(get_current_user), 
+                    db: Session = Depends(get_db)):
+    tarea = db.query(Tarea).filter(Tarea.id == tarea_id).first()
+    if tarea is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
+    if tarea.usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso sobre esta tarea")
+    tarea.titulo = tarea_actualizada.titulo
+    tarea.description = tarea_actualizada.description
+
+    db.commit()               
+    db.refresh(tarea) 
+
+    return tarea
