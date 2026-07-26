@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas import UsuarioBase, UsuarioCreate, UsuarioResponse, TareaBase, TareaCreate, TareaResponse
+from schemas import UsuarioBase, UsuarioCreate, UsuarioResponse, TareaBase, TareaCreate, TareaResponse, Token
 from database import get_db
 from auth import hash_password, verify_password, create_acces_token, verify_access_token
 from models import Usuario
 
 router = APIRouter()
-
-nuevo_objeto = 
 
 @router.post("/register", response_model=UsuarioResponse)
 def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
@@ -23,3 +21,12 @@ def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     db.refresh(usuario_nuevo) 
 
     return usuario_nuevo
+
+
+@router.post("/login", response_model=Token)
+def login(usuario: UsuarioCreate, db: Session = Depends(get_db)):
+    usuario_db = db.query(Usuario).filter(Usuario.email == usuario.email).first()
+    if not usuario_db or not verify_password(usuario.password, usuario_db.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+    token = create_acces_token ({"sub": usuario_db.email})
+    return {"access_token": token, "token_type": "bearer"}
