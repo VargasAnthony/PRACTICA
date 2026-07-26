@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas import UsuarioBase, UsuarioCreate, UsuarioResponse, TareaBase, TareaCreate, TareaResponse, Token
+from schemas import UsuarioBase, UsuarioCreate, UsuarioResponse, Token
 from database import get_db
 from auth import hash_password, verify_password, create_acces_token, verify_access_token
 from models import Usuario
