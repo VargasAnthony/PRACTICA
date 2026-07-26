@@ -45,3 +45,16 @@ def actualizar_tarea(tarea_id: int, tarea_actualizada: TareaCreate,
     db.refresh(tarea) 
 
     return tarea
+
+
+@router.delete("/tareas/{tarea_id}")
+def borrar_tarea(tarea_id: int, usuario_actual: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+    tarea = db.query(Tarea).filter(Tarea.id == tarea_id).first()
+    if tarea is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
+    if tarea.usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso sobre esta tarea")
+    db.delete(tarea)
+    db.commit()
+
+    return {"mensaje": "Tarea eliminada correctamente"}
