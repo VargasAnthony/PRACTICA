@@ -21,3 +21,10 @@ def crear_tarea(tarea: TareaCreate, usuario_actual: Usuario = Depends(get_curren
     db.refresh(tarea_nueva) 
 
     return tarea_nueva
+
+
+@router.get("/tareas", response_model=List[TareaResponse])
+def listar_tareas(usuario_actual: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+    tarea_db = db.query(Tarea).filter(usuario_id == usuario_actual.id).all()
+
+    return tarea_db
