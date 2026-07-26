@@ -4,6 +4,7 @@ from ..schemas import UsuarioBase, UsuarioCreate, UsuarioResponse, Token
 from ..database import get_db
 from ..auth import hash_password, verify_password, create_acces_token, verify_access_token
 from ..models import Usuario
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -24,9 +25,9 @@ def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    usuario_db = db.query(Usuario).filter(Usuario.email == usuario.email).first()
-    if not usuario_db or not verify_password(usuario.password, usuario_db.hashed_password):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    usuario_db = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+    if not usuario_db or not verify_password(form_data.password, usuario_db.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
     token = create_acces_token ({"sub": usuario_db.email})
     return {"access_token": token, "token_type": "bearer"}
